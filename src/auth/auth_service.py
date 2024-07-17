@@ -23,7 +23,7 @@ class AuthService:
             ]
         ))
         if user is not None and bcrypt.checkpw(data.password.encode(), user.password.encode()):
-            return self.jwt_service.encode({'id': user.id}, algorithm="HS256")
+            return self._generate_token(user)
 
         raise HttpException(
             HttpStatus.UNAUTHORIZED,
@@ -38,17 +38,22 @@ class AuthService:
                 username=data.username,
             ))
             if user is not None:
-                return self.jwt_service.encode({'id': user.id}, algorithm="HS256")
+                return self._generate_token(user)
         except Exception as e:
             raise HttpException(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 str(e)
             )
 
+    def _generate_token(self, user: Any):
+        return {
+            "token": self.jwt_service.encode({'id': user.id}, algorithm="HS256")
+        }
+
     async def check(self, token: str) -> Any:
-        decoded: dict = self.jwt_service.decode(token)
+        _token: dict = self.jwt_service.decode(token)
         user = await self.prisma.user.find_first(where=UserWhereInput(
-            id=decoded.get('id')
+            id=_token.get('id')
         ))
         if user is not None:
             return user
