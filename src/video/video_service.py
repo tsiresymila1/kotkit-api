@@ -5,35 +5,35 @@ from typing import Annotated
 import anyio
 from nestipy.common import Injectable
 from nestipy.ioc import Inject
-from nestipy_prisma import PrismaService
-from prisma.types import VideoCreateInput, VideoInclude
-from prisma.types import FindManyCommentArgsFromVideo, CommentIncludeFromLikeRecursive1
-from prisma.types import FindManyLikeArgsFromVideo, LikeIncludeFromLikeRecursive1
+from nestipy_alchemy import SQLAlchemyService
+from sqlalchemy.future import select
+from sqlalchemy.orm import immediateload
 
+from src.comment.models.comment_model import Comment
+from src.like.models.like_model import Like
+from .models.video_model import Video, VideoRelatedModel
 from .video_dto import CreateVideoDto, UpdateVideoDto, CommentDto
 
 
 @Injectable()
 class VideoService:
-    prisma: Annotated[PrismaService, Inject()]
+    db_service: Annotated[SQLAlchemyService, Inject()]
 
     async def list(self):
-        videos = await self.prisma.video.find_many(
-            include=VideoInclude(
-                user=True,
-                likes=FindManyLikeArgsFromVideo(
-                    include=LikeIncludeFromLikeRecursive1(
-                        user=True
-                    )
-                ),
-                comments=FindManyCommentArgsFromVideo(
-                    include=CommentIncludeFromLikeRecursive1(
-                        user=True
-                    )
+        async with self.db_service.session as session:
+            stmt = (
+                select(Video)
+                .options(
+                    immediateload(Video.user),
+                    immediateload(Video.likes).immediateload(Like.user),
+                    immediateload(Video.comments).immediateload(Comment.user)
                 )
             )
-        )
-        return [v.model_dump(mode='json') for v in videos]
+            result = await session.execute(stmt)
+            videos = result.scalars().all()
+            video_serialized = [VideoRelatedModel.model_validate(v).model_dump(mode='json') for v in videos]
+
+        return video_serialized
 
     async def create(self, data: CreateVideoDto, user_id: str):
         hashed_name = f"{uuid.uuid4().hex}.{data.video.filename.split('.')[-1]}"
@@ -41,17 +41,23 @@ class VideoService:
         content = await data.video.read(-1)
         await file_obj.write(content)
         await file_obj.aclose()
-        return await self.prisma.video.create(data=VideoCreateInput(
-            description=data.description,
-            title=data.title,
-            url=hashed_name,
-            userId=user_id
-        ))
+        async with self.db_service.session as session:
+            video = Video(
+                description=data.description,
+                title=data.title,
+                url=hashed_name,
+                user_id=user_id
+            )
+            session.add(video)
+            await session.commit()
+            await session.refresh(video)
 
-    async def comment(self, vide_id:str, data: CommentDto):
+        return video.to_dict()
+
+    async def comment(self, vide_id: str, data: CommentDto):
         pass
 
-    async def update(self, id: int, data: UpdateVideoDto):
+    async def update(self, id: str, data: UpdateVideoDto):
         return "test"
 
     async def delete(self, id: int):

@@ -5,10 +5,25 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: app
-    depends_on:
-      - prometheus
     ports:
       - "8000:8000"
     volumes:
       - ./:/app
     command: [ "nestipy", "start", "--dev" ]
+  mysql:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+  db:
+    image: postgres
+    restart: always
+    shm_size: 128mb
+    environment:
+      POSTGRES_PASSWORD: admin
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"

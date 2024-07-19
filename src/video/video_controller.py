@@ -4,7 +4,7 @@ from nestipy.common import Controller, Get, Post, Put, Delete, Request
 from nestipy.ioc import Inject, Body, Param, Req
 from nestipy.openapi import ApiBody, ApiConsumer
 
-from .video_dto import CommentDto, CreateVideoDto, UpdateVideoDto
+from .video_dto import CreateVideoDto, UpdateVideoDto
 from .video_service import VideoService
 from ..auth.auth_guards import Auth
 
@@ -30,13 +30,3 @@ class VideoController:
     @Delete('/{id}')
     async def delete(self, video_id: Annotated[int, Param('id')]) -> None:
         return await self.video_service.delete(video_id)
-
-    @ApiBody(CommentDto, ApiConsumer.JSON)
-    @Post('/{id}/comment')
-    async def comment(self, video_id: Annotated[str, Param('id')],data: Annotated[CommentDto, Body()]):
-        return await self.video_service.comment(video_id, data)
-
-    @ApiBody(CommentDto, ApiConsumer.JSON)
-    @Post('/{id}/reaction')
-    async def reaction(self, video_id: Annotated[str, Param('id')],data: Annotated[CommentDto, Body()]):
-        return await self.video_service.comment(video_id, data)
