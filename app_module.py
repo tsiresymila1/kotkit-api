@@ -17,7 +17,7 @@ from src.video.video_module import VideoModule
 def sqlalchemy_factory(config: Annotated[ConfigService, Inject()]) -> SQLAlchemyOption:
     return SQLAlchemyOption(
         url=config.get("DATABASE_URL"),
-        sync=False,
+        sync=True,
         declarative_base=Base
     )
 

@@ -15,7 +15,7 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
-  db:
+  postgres:
     image: postgres
     restart: always
     shm_size: 128mb
