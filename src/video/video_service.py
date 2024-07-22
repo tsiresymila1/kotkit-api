@@ -11,7 +11,7 @@ from sqlalchemy.orm import immediateload
 
 from src.comment.models.comment_model import Comment
 from src.like.models.like_model import Like
-from .models.video_model import Video, VideoRelatedModel
+from .models.video_model import Video, VideoRelatedModel, VideoModel
 from .video_dto import CreateVideoDto, UpdateVideoDto, CommentDto
 
 
@@ -35,6 +35,13 @@ class VideoService:
 
         return video_serialized
 
+    async def get(self, video_id):
+        async with self.db_service.session as session:
+            video = await session.get(Video, video_id)
+            if video:
+                return VideoModel.model_validate(video).model_dump(mode='json')
+        return None
+
     async def create(self, data: CreateVideoDto, user_id: str):
         hashed_name = f"{uuid.uuid4().hex}.{data.video.filename.split('.')[-1]}"
         file_obj = await anyio.open_file(os.path.join(os.getcwd(), "assets", "uploads", f"{hashed_name}"), "wb+")
@@ -52,7 +59,7 @@ class VideoService:
             await session.commit()
             await session.refresh(video)
 
-        return video.to_dict()
+        return VideoModel.model_validate(video).model_dump(mode='json')
 
     async def comment(self, vide_id: str, data: CommentDto):
         pass

@@ -1,6 +1,7 @@
 from typing import Annotated, Any
 
 from nestipy.common import Controller, Get, Post, Put, Delete, Request
+from nestipy.common import HttpException, HttpStatus
 from nestipy.ioc import Inject, Body, Param, Req
 from nestipy.openapi import ApiBody, ApiConsumer
 
@@ -17,6 +18,13 @@ class VideoController:
     @Get()
     async def list(self) -> list[Any]:
         return await self.video_service.list()
+
+    @Get("/{id}")
+    async def get_by_id(self, video_id: Annotated[str, Param('id')]) -> dict:
+        video = await self.video_service.get(video_id)
+        if not video:
+            raise HttpException(HttpStatus.INTERNAL_SERVER_ERROR, "Video not found")
+        return video
 
     @ApiBody(CreateVideoDto, ApiConsumer.MULTIPART)
     @Post()

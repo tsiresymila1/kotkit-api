@@ -1,3 +1,5 @@
+import os.path
+
 import uvicorn
 from nestipy.core import NestipyFactory
 from nestipy.openapi import DocumentBuilder, SwaggerModule
@@ -5,6 +7,8 @@ from nestipy.openapi import DocumentBuilder, SwaggerModule
 from app_module import AppModule
 
 app = NestipyFactory.create(AppModule)
+
+app.use_static_assets(os.path.join(os.getcwd(), "assets"), "/assets")
 
 document = (
     DocumentBuilder().set_title("KOTKIT").set_description("Video streaming alternative tiktok")
