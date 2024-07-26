@@ -17,6 +17,7 @@ class AuthService:
     db_service: Annotated[SQLAlchemyService, Inject()]
 
     async def login(self, data: LoginDto):
+        print("Data :::",data)
         async with self.db_service.session as session:
             stmt = select(User).where((User.username == data.username) | (User.email == data.username))
             result = await session.execute(stmt)

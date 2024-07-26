@@ -12,8 +12,9 @@ bcrypt = "^4.1.3"
 nestipy-config = "^0.1.6"
 asyncmy = "^0.2.9"
 nestipy-alchemy = "^0.1.5"
-nestipy = "^0.5.7"
 pymysql = "^1.1.1"
+strawberry-sqlalchemy-mapper = "^0.4.3"
+nestipy = "^0.5.10"
 
 
 [tool.poetry.group.dev.dependencies]

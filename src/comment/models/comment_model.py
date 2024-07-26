@@ -1,13 +1,14 @@
 import uuid
 from typing import TYPE_CHECKING, Optional, List
 
+import strawberry
 from nestipy_alchemy import sqlalchemy_to_pydantic
 from pydantic import Field
 from sqlalchemy import String, DateTime, ForeignKey, func
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import relationship, mapped_column
 
-from base_model import Base
+from base_model import Base, s_sq_mapper
 
 if TYPE_CHECKING:
     from src.user.models.user_model import User, UserModel
@@ -50,3 +51,12 @@ class CommentRelatedModel(CommentModel):
 
 
 CommentRelatedModel.model_rebuild(raise_errors=False)
+
+
+# @s_sq_mapper.type(Comment)
+# class CommentObject:
+#     __exclude__ = []
+
+@strawberry.experimental.pydantic.type(model=CommentModel, all_fields=True)
+class CommentGQL:
+    pass

@@ -1,6 +1,7 @@
 import uuid
 from typing import Optional, List
 
+import strawberry
 from nestipy_alchemy import sqlalchemy_to_pydantic
 from pydantic import Field
 from sqlalchemy import String, DateTime
@@ -8,7 +9,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import relationship, mapped_column
 
-from base_model import Base
+from base_model import Base, s_sq_mapper
 from src.comment.models.comment_model import Comment, CommentRelatedModel
 from src.like.models.like_model import Like, LikeRelatedModel
 from src.video.models.video_model import Video, VideoModel, VideoRelatedModel
@@ -44,3 +45,12 @@ class UserRelatedModel(UserModel):
 
 
 UserRelatedModel.model_rebuild()
+
+
+# @s_sq_mapper.type(User)
+# class UserObject:
+#     __exclude__ = ["password"]
+
+@strawberry.experimental.pydantic.type(model=UserModel, all_fields=True)
+class UserGQL:
+    pass

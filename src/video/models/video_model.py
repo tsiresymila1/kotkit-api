@@ -1,18 +1,19 @@
 import uuid
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List, Optional, Annotated
 
+import strawberry
 from nestipy_alchemy import sqlalchemy_to_pydantic
 from pydantic import Field
 from sqlalchemy import String, DateTime, ForeignKey, func
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import relationship, mapped_column
 
-from base_model import Base
+from base_model import Base, s_sq_mapper
 from src.comment.models.comment_model import Comment, CommentRelatedModel
 from src.like.models.like_model import Like, LikeRelatedModel
 
 if TYPE_CHECKING:
-    from src.user.models.user_model import User, UserModel
+    from src.user.models.user_model import User, UserModel, UserGQL
 
 
 class Video(Base):
@@ -43,3 +44,12 @@ class VideoRelatedModel(VideoModel):
 
 
 VideoRelatedModel.model_rebuild(raise_errors=False)
+
+
+# @s_sq_mapper.type(Video)
+# class VideoObject:
+#     pass
+
+@strawberry.experimental.pydantic.type(model=VideoModel, all_fields=True)
+class VideoGQL:
+    user: Annotated["UserGQL", strawberry.lazy("src.user.models.user_model")]

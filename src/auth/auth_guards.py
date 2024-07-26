@@ -15,12 +15,14 @@ class AuthGuard(CanActivate):
     async def can_activate(self, context: "ExecutionContext") -> Union[Awaitable[bool], bool]:
         request = context.switch_to_http().get_request()
         token = (request.headers.get('authorization') or '').replace("Bearer ", "")
-        user = await self.auth_service.check(token)
-        if user:
-            request.user = user
-            return True
-        else:
-            return False
+        try:
+            user = await self.auth_service.check(token)
+            if user:
+                request.user = user
+                return True
+        except Exception as e:
+            print(e)
+        return False
 
 
 def Auth():

@@ -6,6 +6,7 @@ import anyio
 from nestipy.common import Injectable
 from nestipy.ioc import Inject
 from nestipy_alchemy import SQLAlchemyService
+from sqlalchemy import desc
 from sqlalchemy.future import select
 from sqlalchemy.orm import immediateload
 
@@ -27,7 +28,7 @@ class VideoService:
                     immediateload(Video.user),
                     immediateload(Video.likes).immediateload(Like.user),
                     immediateload(Video.comments).immediateload(Comment.user)
-                )
+                ).order_by(desc(Video.created_at))
             )
             result = await session.execute(stmt)
             videos = result.scalars().all()
@@ -39,7 +40,7 @@ class VideoService:
         async with self.db_service.session as session:
             video = await session.get(Video, video_id)
             if video:
-                return VideoModel.model_validate(video).model_dump(mode='json')
+                return VideoModel.model_validate(video)
         return None
 
     async def create(self, data: CreateVideoDto, user_id: str):
@@ -59,7 +60,7 @@ class VideoService:
             await session.commit()
             await session.refresh(video)
 
-        return VideoModel.model_validate(video).model_dump(mode='json')
+        return VideoModel.model_validate(video)
 
     async def comment(self, vide_id: str, data: CommentDto):
         pass

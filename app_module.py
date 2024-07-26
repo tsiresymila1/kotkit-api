@@ -1,10 +1,12 @@
 from typing import Annotated
 
-from nestipy.common import Module
+from nestipy.common import Module, UploadFile
+from nestipy.graphql import GraphqlModule, GraphqlOption
 from nestipy.ioc import Inject
 from nestipy_alchemy import SQLAlchemyModule, SQLAlchemyOption
 from nestipy_config import ConfigModule, ConfigService
 from nestipy_jwt import JwtModule, JwtOption
+from strawberry.file_uploads import Upload
 
 from base_model import Base
 from src.auth.auth_module import AuthModule
@@ -17,7 +19,7 @@ from src.video.video_module import VideoModule
 def sqlalchemy_factory(config: Annotated[ConfigService, Inject()]) -> SQLAlchemyOption:
     return SQLAlchemyOption(
         url=config.get("DATABASE_URL"),
-        sync=True,
+        sync=False,
         declarative_base=Base
     )
 
@@ -37,6 +39,11 @@ def sqlalchemy_factory(config: Annotated[ConfigService, Inject()]) -> SQLAlchemy
                 is_global=True
             )
         ),
+        GraphqlModule.for_root(options=GraphqlOption(
+            schema_option={
+                "scalar_overrides": {UploadFile: Upload}
+            }
+        )),
         AuthModule,
         UserModule,
         VideoModule,
