@@ -5,7 +5,7 @@ from nestipy_jwt.jwt_service import Annotated
 from sqlalchemy.future import select
 from sqlalchemy.orm import immediateload
 
-from .models.user_model import User, UserRelatedVideoModel
+from .models.user_model import User
 from .user_dto import CreateUserDto, UpdateUserDto
 
 
@@ -18,12 +18,7 @@ class UserService:
             stmt = select(User).options(immediateload(User.videos))
             result = await session.execute(stmt)
             users = result.scalars().all()
-            users_dict = [
-                UserRelatedVideoModel.model_validate(user).model_dump(mode='json') for user in
-                users
-            ]
-            await session.commit()
-        return users_dict
+        return users
 
     async def create(self, data: CreateUserDto):
         return "test"

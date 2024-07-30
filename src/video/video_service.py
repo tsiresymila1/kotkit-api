@@ -8,11 +8,8 @@ from nestipy.ioc import Inject
 from nestipy_alchemy import SQLAlchemyService
 from sqlalchemy import desc
 from sqlalchemy.future import select
-from sqlalchemy.orm import immediateload
 
-from src.comment.models.comment_model import Comment
-from src.like.models.like_model import Like
-from .models.video_model import Video, VideoRelatedModel, VideoModel
+from .models.video_model import Video
 from .video_dto import CreateVideoDto, UpdateVideoDto, CommentDto
 
 
@@ -23,25 +20,16 @@ class VideoService:
     async def list(self):
         async with self.db_service.session as session:
             stmt = (
-                select(Video)
-                .options(
-                    immediateload(Video.user),
-                    immediateload(Video.likes).immediateload(Like.user),
-                    immediateload(Video.comments).immediateload(Comment.user)
-                ).order_by(desc(Video.created_at))
+                select(Video).order_by(desc(Video.created_at))
             )
             result = await session.execute(stmt)
             videos = result.scalars().all()
-            video_serialized = [VideoRelatedModel.model_validate(v).model_dump(mode='json') for v in videos]
-
-        return video_serialized
+        return videos
 
     async def get(self, video_id):
         async with self.db_service.session as session:
             video = await session.get(Video, video_id)
-            if video:
-                return VideoModel.model_validate(video)
-        return None
+        return video
 
     async def create(self, data: CreateVideoDto, user_id: str):
         hashed_name = f"{uuid.uuid4().hex}.{data.video.filename.split('.')[-1]}"
@@ -60,7 +48,7 @@ class VideoService:
             await session.commit()
             await session.refresh(video)
 
-        return VideoModel.model_validate(video)
+        return video
 
     async def comment(self, vide_id: str, data: CommentDto):
         pass

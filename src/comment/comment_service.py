@@ -7,7 +7,7 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import immediateload
 
 from .comment_dto import CreateCommentDto, UpdateCommentDto
-from .models.comment_model import Comment, CommentRelatedModel, CommentModel
+from .models.comment_model import Comment
 
 
 @Injectable()
@@ -24,7 +24,7 @@ class CommentService:
             result = await session.execute(stmt)
             comments = result.scalars().all()
             await session.close()
-        return [CommentRelatedModel.model_validate(c) for c in comments]
+        return comments
 
     async def create(self, user_id: str, data: CreateCommentDto):
         async with self.db_service.session as session:
@@ -37,7 +37,7 @@ class CommentService:
             await session.commit()
             await session.refresh(comment)
 
-        return CommentModel.model_validate(comment).model_dump(mode='json')
+        return comment
 
     async def update(self, id: int, data: UpdateCommentDto):
         return "test"

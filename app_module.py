@@ -1,19 +1,24 @@
 from typing import Annotated
 
-from nestipy.common import Module, UploadFile
+from nestipy.common import Module, UploadFile, ModuleProviderDict
 from nestipy.graphql import GraphqlModule, GraphqlOption
 from nestipy.ioc import Inject
-from nestipy_alchemy import SQLAlchemyModule, SQLAlchemyOption
+from nestipy_alchemy import SQLAlchemyModule, SQLAlchemyOption, SQLAlchemyService
+from nestipy_alchemy import SqlAlchemyPydanticLoader
 from nestipy_config import ConfigModule, ConfigService
 from nestipy_jwt import JwtModule, JwtOption
 from strawberry.file_uploads import Upload
+from strawberry_sqlalchemy_mapper import StrawberrySQLAlchemyLoader
 
 from base_model import Base
+from base_model import s_sq_mapper, p_sq_mapper
 from src.auth.auth_module import AuthModule
 from src.comment.comment_module import CommentModule
 from src.like.like_module import LikeModule
 from src.user.user_module import UserModule
 from src.video.video_module import VideoModule
+
+s_sq_mapper.finalize()
 
 
 def sqlalchemy_factory(config: Annotated[ConfigService, Inject()]) -> SQLAlchemyOption:
@@ -22,6 +27,16 @@ def sqlalchemy_factory(config: Annotated[ConfigService, Inject()]) -> SQLAlchemy
         sync=False,
         declarative_base=Base
     )
+
+
+def sqlalchemy_to_pydantic_factory(service: Annotated[SQLAlchemyService, Inject()]) -> SqlAlchemyPydanticLoader:
+    return SqlAlchemyPydanticLoader(_mapper=p_sq_mapper, async_bind_factory=lambda: service.session)
+
+
+def update_context(service: Annotated[SQLAlchemyService, Inject()]):
+    return {
+        "sqlalchemy_loader": StrawberrySQLAlchemyLoader(async_bind_factory=lambda: service.session)
+    }
 
 
 @Module(
@@ -41,8 +56,10 @@ def sqlalchemy_factory(config: Annotated[ConfigService, Inject()]) -> SQLAlchemy
         ),
         GraphqlModule.for_root(options=GraphqlOption(
             schema_option={
-                "scalar_overrides": {UploadFile: Upload}
-            }
+                "scalar_overrides": {UploadFile: Upload},
+                "types": s_sq_mapper.mapped_types.values()
+            },
+            context_callback=update_context
         )),
         AuthModule,
         UserModule,
@@ -50,6 +67,14 @@ def sqlalchemy_factory(config: Annotated[ConfigService, Inject()]) -> SQLAlchemy
         CommentModule,
         LikeModule
     ],
+    providers=[
+        ModuleProviderDict(
+            token=SqlAlchemyPydanticLoader,
+            factory=sqlalchemy_to_pydantic_factory,
+            inject=[SQLAlchemyService],
+            imports=[SQLAlchemyModule]
+        )
+    ]
 )
 class AppModule:
     ...
