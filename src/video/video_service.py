@@ -45,7 +45,6 @@ class VideoService:
                 user_id=user_id
             )
             session.add(video)
-            await session.commit()
             await session.refresh(video)
 
         return video

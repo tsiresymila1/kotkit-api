@@ -14,6 +14,7 @@ class CreateVideoDto:
 class UpdateVideoDto(CreateVideoDto):
     id: int
 
+
 @dataclass
 class CommentDto:
     comment: str

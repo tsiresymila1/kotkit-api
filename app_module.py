@@ -7,6 +7,7 @@ from nestipy_alchemy import SQLAlchemyModule, SQLAlchemyOption, SQLAlchemyServic
 from nestipy_alchemy import SqlAlchemyPydanticLoader
 from nestipy_config import ConfigModule, ConfigService
 from nestipy_jwt import JwtModule, JwtOption
+from sqlalchemy.ext.asyncio import AsyncSession
 from strawberry.file_uploads import Upload
 from strawberry_sqlalchemy_mapper import StrawberrySQLAlchemyLoader
 
@@ -30,12 +31,23 @@ def sqlalchemy_factory(config: Annotated[ConfigService, Inject()]) -> SQLAlchemy
 
 
 def sqlalchemy_to_pydantic_factory(service: Annotated[SQLAlchemyService, Inject()]) -> SqlAlchemyPydanticLoader:
-    return SqlAlchemyPydanticLoader(_mapper=p_sq_mapper, async_bind_factory=lambda: service.session)
+    return SqlAlchemyPydanticLoader(
+        _mapper=p_sq_mapper,
+        async_bind_factory=lambda: AsyncSession(
+            service.engine,
+            expire_on_commit=False
+        )
+    )
 
 
 def update_context(service: Annotated[SQLAlchemyService, Inject()]):
     return {
-        "sqlalchemy_loader": StrawberrySQLAlchemyLoader(async_bind_factory=lambda: service.session)
+        "sqlalchemy_loader": StrawberrySQLAlchemyLoader(
+            async_bind_factory=lambda: AsyncSession(
+                service.engine,
+                expire_on_commit=False
+            )
+        )
     }
 
 
