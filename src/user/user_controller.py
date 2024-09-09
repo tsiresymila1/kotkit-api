@@ -19,7 +19,10 @@ class UserController:
     async def list(self) -> list[dict]:
         users = await self.user_service.list()
         return [(await self.p_sq_loader.load(u, depth=3, mode="json")) for u in users]
-        # return [(await self.p_sq_loader.load(u, depth=3)).model_dump(mode="json")for u in users]
+
+    @Get('/me')
+    async def me(self, req: Annotated[Request, Req()]) -> dict:
+        return await self.p_sq_loader.load(req.user, depth=3, mode="json")
 
     @Get('/me')
     async def me(self, req: Annotated[Request, Req()]) -> dict:

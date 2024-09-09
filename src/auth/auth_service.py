@@ -6,6 +6,7 @@ from nestipy.ioc import Inject
 from nestipy_alchemy import SQLAlchemyService
 from nestipy_jwt import JwtService
 from sqlalchemy.future import select
+from sqlalchemy.orm import lazyload
 
 from .auth_dto import LoginDto, RegisterDto
 from ..user.models.user_model import User
@@ -58,7 +59,7 @@ class AuthService:
     async def check(self, token: str) -> Any:
         _token: dict = self.jwt_service.decode(token)
         async with self.db_service.session as session:
-            stmt = select(User).where(User.id == _token.get('id'))
+            stmt = select(User).options(lazyload(User.videos)).where(User.id == _token.get('id'))
             result = await session.execute(stmt)
             user = result.scalars().first()
             await session.close()
