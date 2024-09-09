@@ -7,6 +7,7 @@ from nestipy.common import Injectable
 from nestipy.ioc import Inject
 from nestipy_alchemy import SQLAlchemyService
 from sqlalchemy import desc
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from .models.video_model import Video
@@ -32,12 +33,13 @@ class VideoService:
         return video
 
     async def create(self, data: CreateVideoDto, user_id: str):
-        hashed_name = f"{uuid.uuid4().hex}.{data.video.filename.split('.')[-1]}"
+        ext = data.video.filename.split('.')[-1]
+        hashed_name = f"{uuid.uuid4().hex}.{ext if ext != 'temp' else 'mp4'}"
         file_obj = await anyio.open_file(os.path.join(os.getcwd(), "assets", "uploads", f"{hashed_name}"), "wb+")
         content = await data.video.read(-1)
         await file_obj.write(content)
         await file_obj.aclose()
-        async with self.db_service.session as session:
+        async with AsyncSession(self.db_service.engine) as session:
             video = Video(
                 description=data.description,
                 title=data.title,
@@ -45,8 +47,8 @@ class VideoService:
                 user_id=user_id
             )
             session.add(video)
+            await session.commit()
             await session.refresh(video)
-
         return video
 
     async def comment(self, vide_id: str, data: CommentDto):

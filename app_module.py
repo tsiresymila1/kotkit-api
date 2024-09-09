@@ -1,18 +1,18 @@
+from src.follow.follow_module import FollowModule
 from typing import Annotated
 
-from nestipy.common import Module, UploadFile, ModuleProviderDict
+from nestipy.common import Module, ModuleProviderDict, UploadFile
 from nestipy.graphql import GraphqlModule, GraphqlOption
 from nestipy.ioc import Inject
-from nestipy_alchemy import SQLAlchemyModule, SQLAlchemyOption, SQLAlchemyService
-from nestipy_alchemy import SqlAlchemyPydanticLoader
+from nestipy_alchemy import (SQLAlchemyModule, SQLAlchemyOption,
+                             SqlAlchemyPydanticLoader, SQLAlchemyService)
 from nestipy_config import ConfigModule, ConfigService
 from nestipy_jwt import JwtModule, JwtOption
 from sqlalchemy.ext.asyncio import AsyncSession
 from strawberry.file_uploads import Upload
 from strawberry_sqlalchemy_mapper import StrawberrySQLAlchemyLoader
 
-from base_model import Base
-from base_model import s_sq_mapper, p_sq_mapper
+from base_model import Base, p_sq_mapper, s_sq_mapper
 from src.auth.auth_module import AuthModule
 from src.comment.comment_module import CommentModule
 from src.like.like_module import LikeModule
@@ -77,7 +77,8 @@ def update_context(service: Annotated[SQLAlchemyService, Inject()]):
         UserModule,
         VideoModule,
         CommentModule,
-        LikeModule
+        LikeModule,
+        FollowModule
     ],
     providers=[
         ModuleProviderDict(

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 @dataclass
 class CreateLikeDto:
-    name: str
+    video_id: str
 
 
 @dataclass

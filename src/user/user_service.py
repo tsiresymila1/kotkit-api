@@ -3,7 +3,7 @@ from nestipy.ioc import Inject
 from nestipy_alchemy import SQLAlchemyService
 from nestipy_jwt.jwt_service import Annotated
 from sqlalchemy.future import select
-from sqlalchemy.orm import immediateload
+from sqlalchemy.orm import lazyload
 
 from .models.user_model import User
 from .user_dto import CreateUserDto, UpdateUserDto
@@ -15,7 +15,7 @@ class UserService:
 
     async def list(self):
         async with self.db_service.session as session:
-            stmt = select(User).options(immediateload(User.videos))
+            stmt = select(User).options(lazyload(User.videos))
             result = await session.execute(stmt)
             users = result.scalars().all()
         return users

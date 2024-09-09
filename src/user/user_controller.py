@@ -1,7 +1,7 @@
 from typing import Annotated
 
-from nestipy.common import Controller, Get, Post, Put, Delete
-from nestipy.ioc import Inject, Body, Param
+from nestipy.common import Controller, Get, Post, Put, Delete, Request
+from nestipy.ioc import Inject, Body, Param, Req
 from nestipy_alchemy import SqlAlchemyPydanticLoader
 
 from src.auth.auth_guards import Auth
@@ -20,6 +20,10 @@ class UserController:
         users = await self.user_service.list()
         return [(await self.p_sq_loader.load(u, depth=3, mode="json")) for u in users]
         # return [(await self.p_sq_loader.load(u, depth=3)).model_dump(mode="json")for u in users]
+
+    @Get('/me')
+    async def me(self, req: Annotated[Request, Req()]) -> dict:
+        return await self.p_sq_loader.load(req.user, mode="json", depth=3)
 
     @Post()
     async def create(self, data: Annotated[CreateUserDto, Body()]) -> str:

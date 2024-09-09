@@ -10,7 +10,7 @@ from .comment_service import CommentService
 
 
 @Auth()
-@Controller('videos/{video_id}/comments')
+@Controller('videos/{video_id}/comment')
 class CommentController:
     comment_service: Annotated[CommentService, Inject()]
 
