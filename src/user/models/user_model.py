@@ -18,6 +18,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True)
     username: Mapped[str] = mapped_column(String(255))
     password: Mapped[str] = mapped_column(String(255))
+    avatar: Mapped[str] = mapped_column(String(255), nullable=True)
 
     videos: Mapped[list[Video]] = relationship("Video", back_populates="user", default_factory=lambda: [])
     comments: Mapped[list[Comment]] = relationship(

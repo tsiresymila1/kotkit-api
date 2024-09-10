@@ -1,0 +1,29 @@
+name: CI/CD Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/cicd/app/python/kotkit
+            git pull origin main
+            source /home/cicd/app/python/kotkit/.venv/bin/activate
+            /home/cicd/.local/bin/poetry install --no-root
+            alembic upgrade head
+            pm2 restart kotkit --update-env
+            pm2 status
