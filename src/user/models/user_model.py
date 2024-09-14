@@ -4,15 +4,15 @@ from sqlalchemy import String, DateTime
 from sqlalchemy import func
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import relationship, mapped_column
-
-from base_model import Base, s_sq_mapper, p_sq_mapper
+from nestipy_alchemy.converter import AlchemyPydanticMixim
+from base_model import Base, s_sq_mapper
 from src.comment.models.comment_model import Comment
 from src.follow.models.follow_model import Follow
 from src.like.models.like_model import Like
 from src.video.models.video_model import Video
 
 
-class User(Base):
+class User(Base, AlchemyPydanticMixim):
     __tablename__ = 'users'
 
     email: Mapped[str] = mapped_column(String(255), unique=True)
@@ -46,4 +46,4 @@ class User(Base):
 
 s_sq_mapper.type(User)(type("User", (), {"__exclude__": ["password"]}))
 s_sq_mapper.finalize()
-p_sq_mapper.type(User, exclude=["password"])(type("User", (), {}))
+User.load(exclude=["password"], model_name="User")

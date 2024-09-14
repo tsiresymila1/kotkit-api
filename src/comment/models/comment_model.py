@@ -1,6 +1,7 @@
 import uuid
 from typing import TYPE_CHECKING
 
+from nestipy_alchemy.converter import AlchemyPydanticMixim
 from sqlalchemy import String, DateTime, ForeignKey, func
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import relationship, mapped_column
@@ -12,7 +13,7 @@ if TYPE_CHECKING:
     from src.video.models.video_model import Video
 
 
-class Comment(Base):
+class Comment(Base, AlchemyPydanticMixim):
     __tablename__ = 'comments'
 
     text: Mapped[str] = mapped_column(String(255))

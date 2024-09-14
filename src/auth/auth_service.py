@@ -5,12 +5,17 @@ from nestipy.common import Injectable, HttpException, HttpStatusMessages, HttpSt
 from nestipy.ioc import Inject
 from nestipy_alchemy import SQLAlchemyService
 from nestipy_jwt import JwtService
+from sqlalchemy import func
+from sqlalchemy.dialects import mysql
 from sqlalchemy.future import select
-from sqlalchemy.orm import lazyload
+from sqlalchemy.orm import aliased
 
 from .auth_dto import LoginDto, RegisterDto
 from ..user.models.user_model import User
 
+Video = aliased(User.videos.property.mapper.class_)
+Follower = aliased(User.followers.property.mapper.class_)
+Following = aliased(User.following.property.mapper.class_)
 
 @Injectable()
 class AuthService:
@@ -59,11 +64,39 @@ class AuthService:
     async def check(self, token: str) -> Any:
         _token: dict = self.jwt_service.decode(token)
         async with self.db_service.session as session:
-            stmt = select(User).options(lazyload(User.videos)).where(User.id == _token.get('id'))
-            result = await session.execute(stmt)
-            user = result.scalars().first()
-            await session.close()
-        if user is not None:
-            return user
-        else:
-            return None
+            try:
+                # subquery_video = (
+                #     select(func.count())
+                #     .select_from(Video)
+                #     .where(Video.user_id == User.id)  # Ensure you have the correct foreign key relationship
+                #     .scalar_subquery()
+                # )
+                # subquery_follower = (
+                #     select(func.count())
+                #     .select_from(Follower)
+                #     .where(Follower.user_id == User.id)  # Ensure you have the correct foreign key relationship
+                #     .scalar_subquery()
+                # )
+                # subquery_followings = (
+                #     select(func.count())
+                #     .select_from(Following)
+                #     .where(Following.following_id == User.id)  # Ensure you have the correct foreign key relationship
+                #     .scalar_subquery()
+                # )
+                stmt = select(
+                    User,
+                    # subquery_video.label('video_count'),
+                    # subquery_follower.label('follower_count'),
+                    # subquery_followings.label('following_count')
+                ).where(
+                    User.id == _token.get('id')
+                )
+                result = await session.execute(stmt)
+                user = result.scalars().first()
+                # user = result.fetchone().
+                await session.close()
+                return user
+            except Exception as e:
+                print(e)
+                return None
+
